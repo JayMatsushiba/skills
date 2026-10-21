@@ -16,6 +16,12 @@ can finish on its own.
 
 - `README.md` (required; if it's missing, run `/project-readme` first)
 - `docs/`, and the decisions or plans `/project-readme` reported
+- the developer's Obsidian notes on the project: the project note, meeting
+  notes, and brainstorms and drafts (find the vault and notes as in
+  `/project-readme` step 2). Brainstorms are ideas, not decisions: put an
+  idea in the spec only if the developer confirms it, or list it under Open
+  questions.
+  Read only; don't edit the vault.
 - the developer's instructions and feedback in this conversation
 - if the spec already exists and issues have been created, the GitHub issues
   (`gh issue list --state all`), so the spec reflects what's done
