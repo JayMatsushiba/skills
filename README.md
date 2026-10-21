@@ -31,6 +31,9 @@ project, where it was first used.
                same work-item agent
                          │
                          ▼
+   developer review ◄──► same agent incorporates feedback
+                         │  (repeat until the developer approves)
+                         ▼
           rebase on main if needed ──► squash-merge ──► issue closes
 ```
 
@@ -57,9 +60,15 @@ project, where it was first used.
    comments.
 6. **Feedback.** The review goes back to the agent that wrote the PR. It
    works through the comments, replies to each one and pushes fixes.
-7. **Merge.** If `main` has moved on since the branch started, the agent
-   rebases the branch onto `main`. Then the PR is squash-merged, which closes
-   the issue.
+7. **Developer review.** Every PR gets a human review before merging, even
+   when the agent reviews found nothing. The agent brings the branch up to
+   date with `main`, then asks me to review, with a short summary of the
+   results, what changed after the agent reviews, and open questions. My
+   feedback (on the PR or in the session) goes back to the same agent, which
+   incorporates it the same way. This repeats until I approve explicitly.
+8. **Merge.** If `main` has moved on since then, the agent rebases the branch
+   onto `main` again, and shows me any conflict fixes that change what I
+   approved. Then the PR is squash-merged, which closes the issue.
 
 ## Skills
 
@@ -68,7 +77,7 @@ project, where it was first used.
 | [`project-readme`](project-readme/SKILL.md) | 1 | Drafts or updates `README.md` from `docs/`, my notes, and Drive, Gmail and Slack |
 | [`project-spec`](project-spec/SKILL.md) | 2 | Drafts and revises `SPEC.md` with phases and workstreams |
 | [`spec-issues`](spec-issues/SKILL.md) | 3 | Creates labels and one issue per work item from `SPEC.md`, and keeps them in sync |
-| [`work-item`](work-item/SKILL.md) | 4, 6, 7 | Takes one issue through branch, PR, review feedback, rebase and squash-merge |
+| [`work-item`](work-item/SKILL.md) | 4, 6, 7, 8 | Takes one issue through branch, PR, agent and developer feedback, rebase and squash-merge |
 | [`pr-review`](pr-review/SKILL.md) | 5 | Starts the content and code review agents on a PR and posts their findings |
 | [`content-review`](content-review/SKILL.md) | 5 | Reviews report prose as a project manager would read it |
 
@@ -87,8 +96,9 @@ project, where it was first used.
   issues and PRs, so a new agent can pick up the work from GitHub alone.
 - **Connectors are read-only.** The skills search Drive, Gmail and Slack but
   never send, post, share or edit anything there.
-- **Ask before merging.** Squash-merging is the developer's call unless they
-  have said otherwise for the project.
+- **No merge without developer approval.** Every PR goes through the
+  developer review stage, and only an explicit approval ("merge it", or an
+  approving PR review) allows the squash-merge.
 
 ## Install
 

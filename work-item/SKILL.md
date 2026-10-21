@@ -1,6 +1,6 @@
 ---
 name: work-item
-description: Take one GitHub issue through to a merged PR, as the single agent responsible for it. Creates a branch in its own worktree when work starts, commits the work, opens a PR that closes the issue when the work is nearly done, then, after /pr-review, works through the review comments, rebases onto main if main has moved, and squash-merges. Use when asked to "work on #N", "pick up issue N", "address the review on PR N", or to finish and merge a work item. Never switches to another issue or PR.
+description: Take one GitHub issue through to a merged PR, as the single agent responsible for it. Creates a branch in its own worktree when work starts, commits the work, opens a PR that closes the issue when the work is nearly done, then, after /pr-review, works through the review comments, asks the developer to review and incorporates their feedback, rebases onto main if main has moved, and squash-merges once the developer approves. Use when asked to "work on #N", "pick up issue N", "address the review on PR N", or to finish and merge a work item. Never switches to another issue or PR.
 argument-hint: "<issue number> | --feedback <PR number> | --merge <PR number>"
 ---
 
@@ -133,7 +133,39 @@ skill. Either way, the work stays on this one item.
 5. Post a short summary comment on the PR: what was fixed, what was left and
    why, and questions for the developer.
 
-## Stage 5: Rebase and merge (`--merge <PR>`)
+Then stop and tell the developer the PR is ready for their review (Stage 5).
+
+## Stage 5: Developer review
+
+Every PR gets a human review before it's merged. The agent reviews catch
+bugs and wording; the developer checks that the work does what the project
+needs. Don't skip this stage, even when the agent reviews found nothing.
+
+1. **Bring the branch up to date first,** so the developer reviews what will
+   be merged. If `main` has moved on, rebase as in Stage 6, step 1.
+2. **Ask for the review.** Post a PR comment, and tell the developer in the
+   session, with:
+   - the PR link and, for reports or notebooks, how to see the rendered
+     output
+   - a few lines on what the PR does and its main results
+   - what changed after the agent reviews, and what was left and why
+   - open questions that need the developer's decision
+3. **Wait for the developer's feedback.** It can come as PR review
+   comments, PR comments, or messages in the session. If the agent stopped
+   while waiting, `/work-item --feedback <PR>` picks the work up again. Treat it like the agent reviews
+   (Stage 4): fix or explain each point, commit with readable messages, push,
+   and reply on the PR. Record feedback given in the session as a PR comment
+   too, so GitHub holds the full record.
+4. **Repeat** steps 2 and 3 until the developer approves. Approval must be
+   explicit: "merge it", "approved", or an approving PR review. Fixing the
+   last comment isn't approval.
+
+If the developer's feedback changes the scope of the issue, stop and ask
+whether to widen this PR or open a new issue, rather than doing both here.
+
+## Stage 6: Rebase and merge (`--merge <PR>`)
+
+Only after the developer has approved in Stage 5.
 
 1. **Rebase if `main` has moved on:**
 
@@ -145,12 +177,12 @@ skill. Either way, the work stays on this one item.
    Resolve conflicts by keeping both sides' intent. If a conflict touches
    another item's work in a way you can't resolve without changing its
    meaning, stop and ask. After rebasing, rerun tests and renders, then
-   `git push --force-with-lease`.
-2. **Check the PR is ready:** CI passes (`gh pr checks <PR>`), every review
-   comment has a reply, and no question is waiting on the developer.
-3. **Ask the developer before merging,** unless they've said this project
-   merges without asking.
-4. **Squash-merge:**
+   `git push --force-with-lease`. If resolving conflicts changed anything the
+   developer approved, show them the change and get approval again.
+2. **Check the PR is ready:** CI passes (`gh pr checks <PR>`), every agent
+   and developer comment has a reply, and no question is waiting on the
+   developer.
+3. **Squash-merge:**
 
    ```bash
    gh pr merge <PR> --squash --delete-branch
@@ -159,5 +191,5 @@ skill. Either way, the work stays on this one item.
    The `Closes #N` line closes the issue. If the branch is checked out in a
    worktree, leave the worktree first and remove it afterwards
    (`git worktree remove <path>`).
-5. Report the merge commit, the closed issue, and any follow-up issues
+4. Report the merge commit, the closed issue, and any follow-up issues
    opened along the way.

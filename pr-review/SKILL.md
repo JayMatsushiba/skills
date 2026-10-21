@@ -92,4 +92,5 @@ agents.
 
 Reply with the PR link, the number of findings from each reviewer, the most
 serious ones in a line each, the content reviewer's open questions, and which
-agent the PR was handed to.
+agent the PR was handed to. After it addresses the reviews, that agent asks
+the developer for the human review (`work-item` Stage 5) before any merge.
