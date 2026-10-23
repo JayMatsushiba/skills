@@ -126,8 +126,9 @@ The skills need:
 - for `/literature-review`: web search, and a Zotero MCP server connected to
   the developer's library (for adding papers, reading PDFs and checking
   retractions). Adding papers needs a real library ID, a Zotero API key
-  with write access, and PyMuPDF in the MCP's environment so PDFs attach to
-  their items; the skill checks these first and gives the setup steps
+  with write access, and PyMuPDF in the MCP's environment so PDFs can be
+  read. PDFs are uploaded with the skill's own script, because the MCP's
+  file upload doesn't work. The skill checks all this first and gives the setup steps
   ([step 0](literature-review/SKILL.md#0-check-zotero)). Without Zotero it
   can still search and read open-access papers, but keeps no library and
   says so. Optionally, Claude in Chrome fetches paywalled papers through the

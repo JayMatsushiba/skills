@@ -28,8 +28,8 @@ papers are collected:
 2. **Write:** create the review's collection (step 4). "Invalid
    Authorization header format" or a 403 means there's no valid API key.
    Writes go through the Zotero web API even when reads are local.
-3. **PDF support:** `zotero_add_from_file` needs PyMuPDF to match a PDF to
-   its item. Check with
+3. **PDF support:** `zotero_read_pdf_pages` and `zotero_add_from_file` need
+   PyMuPDF. Check with
    `~/.local/share/uv/tools/zotero-mcp-server/bin/python -c "import pymupdf"`
    (adjust the path if the MCP was installed another way). If it's missing,
    install it into that environment:
@@ -58,7 +58,7 @@ failed check 3 needs no developer action: install PyMuPDF as described.
      -- zotero-mcp
    ```
 
-3. Add PyMuPDF to the MCP's environment, so PDFs attach to their items:
+3. Add PyMuPDF to the MCP's environment, so PDFs in Zotero can be read:
    `uv pip install --python ~/.local/share/uv/tools/zotero-mcp-server/bin/python pymupdf`
    (for a uv tool install; otherwise install `pymupdf` wherever
    `zotero-mcp` runs, or install `zotero-mcp-server[pdf]`).
@@ -130,27 +130,32 @@ queries run: it goes in the note, so absence claims say what was searched.
   `zotero_search_collections` and retry.
 - **Every paper read has its PDF in Zotero.** That includes papers read as
   HTML or through the browser, and supplements. `zotero_add_by_doi` often
-  finds no PDF, even for open-access papers, so download the PDF into its
-  own directory and add it with `zotero_add_from_file(if_exists="file")`.
-  That tool reads the DOI from the PDF and attaches the file to the item with
-  that DOI, creating the item from the DOI if it isn't in the library yet.
-  - It needs PyMuPDF in the Zotero MCP's environment (step 0). Without it,
-    or when it can't read the DOI from the PDF, it creates a separate item
-    with no metadata instead. Publisher PDFs often print the DOI in a way
-    it can't read, even on the first page.
-  - So always write the DOI into a copy of the PDF's metadata first, using
-    the MCP's Python:
+  finds no PDF, even for open-access papers. Don't use
+  `zotero_add_from_file` to attach files: it reports "File attached", but
+  the upload is rejected and nothing reaches Zotero. Instead:
+  1. Create the item with `zotero_add_by_doi(attach_mode="none")`. For a
+     report with no DOI, use `zotero_add_by_url`, or
+     `zotero_add_from_file` with `title` and `item_type="report"`, which
+     creates the item (still without the file).
+  2. Download the PDF into its own directory and give it a readable name
+     (`Author_Year_topic.pdf`).
+  3. Upload it to the item with `scripts/upload_attachments.py` in this
+     skill. It reads a manifest of `<item key> <path>` lines and uses the
+     Zotero MCP's own Python and credentials, which it reads from the MCP
+     configuration without printing them:
 
-    ```bash
-    ~/.local/share/uv/tools/zotero-mcp-server/bin/python -I -c '
-    import sys, pymupdf
-    d = pymupdf.open(sys.argv[1]); m = d.metadata or {}
-    m["subject"] = sys.argv[2]; d.set_metadata(m); d.save(sys.argv[3])
-    ' in.pdf 10.xxxx/yyyy tagged/out.pdf
-    ```
+     ```bash
+     eval "$(claude mcp get zotero | sed -n 's/^ *\(ZOTERO_API_KEY\|ZOTERO_LIBRARY_ID\)=\(.*\)$/export \1="\2"/p')"
+     ~/.local/share/uv/tools/zotero-mcp-server/bin/python -I \
+       ~/.claude/skills/literature-review/scripts/upload_attachments.py manifest.txt
+     ```
 
-  - Check that the result names the expected item key and DOI. A report
-    with no DOI gets its own item: pass `title` and `item_type="report"`.
+     Each line should end `ok`, or `unchanged` (Zotero already stores an
+     identical file and links to it). Uploads take several seconds each,
+     so run a long batch in the background.
+  4. Check with `zotero_library_coverage` once Zotero desktop has synced,
+     and read page 1 of one PDF with `zotero_read_pdf_pages` to confirm
+     the file itself arrived.
 - **Tag** each item with the quantities it reports (for example
   `sediment-carbon`, `shoot-density`).
 - **Check retractions:** `scite_check_retractions` on the collection. Drop
