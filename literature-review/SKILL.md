@@ -15,6 +15,46 @@ When the request is a GitHub issue, run this inside `/work-item <issue>`: the
 table and note are the work item's output, and they go through the usual PR,
 review and developer approval.
 
+## 0. Check Zotero
+
+Test the Zotero MCP before anything else, so a broken setup shows up before
+papers are collected:
+
+1. **Read:** `zotero_get_collections`. An error naming `YOUR_LIBRARY_ID`
+   means the library ID is still a placeholder. The same error from Zotero's
+   local API gives the real user ID ("use userID 0 or <id>"); for this
+   session, `zotero_switch_library(library_id="0", library_type="user")`
+   makes reads work.
+2. **Write:** create the review's collection (step 4). "Invalid
+   Authorization header format" or a 403 means there's no valid API key.
+   Writes go through the Zotero web API even when reads are local.
+
+If either check fails, stop and give the developer the setup steps below.
+Don't read or print the API key: the developer pastes it in themselves. If
+they'd rather not set it up, carry on without a library and say so.
+
+**Setup (done by the developer):**
+
+1. Create a key at <https://www.zotero.org/settings/keys/new> with "Allow
+   library access" and "Allow write access" under Personal Library.
+2. In their own terminal, not with `!` in the session, so the key stays out
+   of the transcript:
+
+   ```bash
+   claude mcp remove zotero -s user
+   claude mcp add zotero -s user \
+     -e ZOTERO_LOCAL=true \
+     -e ZOTERO_LIBRARY_ID=<user ID> \
+     -e ZOTERO_LIBRARY_TYPE=user \
+     -e ZOTERO_API_KEY=<key> \
+     -- zotero-mcp
+   ```
+
+3. Keep Zotero desktop open with sync on, then reconnect with `/mcp`.
+
+This is hybrid mode: reads come from the local Zotero app, writes go through
+the web API and reach the local app when it syncs.
+
 ## 1. Scope the question
 
 Before searching, write down what's needed, from the issue, `SPEC.md` and
@@ -72,6 +112,16 @@ queries run: it goes in the note, so absence claims say what was searched.
 - **Add by identifier:** `zotero_add_by_doi` (it tries to download an
   open-access PDF), `zotero_add_by_isbn` for books, `zotero_add_by_url` for
   reports. Check the DOI resolves to the paper you meant before adding.
+- **Wait for sync.** In hybrid mode a new collection or item is visible to
+  reads, and can be filed into, only after Zotero desktop syncs (a few
+  seconds). If a call says the collection isn't found, check with
+  `zotero_search_collections` and retry.
+- **PDFs.** `zotero_add_by_doi` often finds no PDF, even for open-access
+  papers. `zotero_add_from_file` can't attach a PDF to an existing item: it
+  always creates a separate item with no metadata, so don't call it after
+  `zotero_add_by_doi`. Download the PDF into its own directory, read it
+  there, and list it for the developer to attach in Zotero desktop (drag it
+  onto the item, or use "Find Full Text").
 - **Tag** each item with the quantities it reports (for example
   `sediment-carbon`, `shoot-density`).
 - **Check retractions:** `scite_check_retractions` on the collection. Drop
@@ -95,12 +145,15 @@ library login, a library proxy, or a personal subscription. Skip it with
 paywall.
 
 1. **Ask once which access route to use** (for example "University library
-   proxy" or "publisher login"), and whether the Zotero Connector is
-   installed in that Chrome. Note the answer for the rest of the review.
+   proxy" or "publisher login"), and which tool shows it on article pages
+   (for example the LibKey Nomad extension's "Download PDF" link). Note the
+   answer for the rest of the review.
 2. **One paper at a time,** in a new tab: open the article page through
-   that route, open the PDF, and save it to the Zotero item (with the
-   Zotero Connector, or by downloading it and attaching it with
-   `zotero_add_from_file`). Check the saved PDF is the right paper.
+   that route and download the PDF, after the developer has approved
+   downloading it. Read it locally and check it's the right paper, then
+   handle it as in step 4 ("PDFs"). Claude in Chrome can't use the Zotero
+   Connector: its toolbar button and keyboard shortcut are handled by
+   Chrome, outside the page.
 3. **Stop and hand over to the developer** at any sign-in, single sign-on,
    two-factor or CAPTCHA page. Continue after they have signed in.
 4. **Never pay.** Stop at any purchase, "buy article" or rental page and
@@ -117,6 +170,9 @@ Sci-Hub or LibGen), even if a search result points to one.
 
 Zotero is the developer's own library: add items, tags, notes and
 collections, but don't delete, merge or edit existing items without asking.
+Items this review created by mistake (duplicates, failed imports) may be
+moved to the Zotero trash with `zotero_delete_item`. Say which ones, and
+never empty the trash.
 
 ## 5. Read and extract
 
