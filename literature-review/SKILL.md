@@ -28,10 +28,18 @@ papers are collected:
 2. **Write:** create the review's collection (step 4). "Invalid
    Authorization header format" or a 403 means there's no valid API key.
    Writes go through the Zotero web API even when reads are local.
+3. **PDF support:** `zotero_add_from_file` needs PyMuPDF to match a PDF to
+   its item. Check with
+   `~/.local/share/uv/tools/zotero-mcp-server/bin/python -c "import pymupdf"`
+   (adjust the path if the MCP was installed another way). If it's missing,
+   install it into that environment:
+   `uv pip install --python ~/.local/share/uv/tools/zotero-mcp-server/bin/python pymupdf`.
+   No reconnect is needed.
 
-If either check fails, stop and give the developer the setup steps below.
+If check 1 or 2 fails, stop and give the developer the setup steps below.
 Don't read or print the API key: the developer pastes it in themselves. If
-they'd rather not set it up, carry on without a library and say so.
+they'd rather not set it up, carry on without a library and say so. A
+failed check 3 needs no developer action: install PyMuPDF as described.
 
 **Setup (done by the developer):**
 
@@ -50,7 +58,11 @@ they'd rather not set it up, carry on without a library and say so.
      -- zotero-mcp
    ```
 
-3. Keep Zotero desktop open with sync on, then reconnect with `/mcp`.
+3. Add PyMuPDF to the MCP's environment, so PDFs attach to their items:
+   `uv pip install --python ~/.local/share/uv/tools/zotero-mcp-server/bin/python pymupdf`
+   (for a uv tool install; otherwise install `pymupdf` wherever
+   `zotero-mcp` runs, or install `zotero-mcp-server[pdf]`).
+4. Keep Zotero desktop open with sync on, then reconnect with `/mcp`.
 
 This is hybrid mode: reads come from the local Zotero app, writes go through
 the web API and reach the local app when it syncs.
@@ -116,12 +128,28 @@ queries run: it goes in the note, so absence claims say what was searched.
   reads, and can be filed into, only after Zotero desktop syncs (a few
   seconds). If a call says the collection isn't found, check with
   `zotero_search_collections` and retry.
-- **PDFs.** `zotero_add_by_doi` often finds no PDF, even for open-access
-  papers. `zotero_add_from_file` can't attach a PDF to an existing item: it
-  always creates a separate item with no metadata, so don't call it after
-  `zotero_add_by_doi`. Download the PDF into its own directory, read it
-  there, and list it for the developer to attach in Zotero desktop (drag it
-  onto the item, or use "Find Full Text").
+- **Every paper read has its PDF in Zotero.** That includes papers read as
+  HTML or through the browser, and supplements. `zotero_add_by_doi` often
+  finds no PDF, even for open-access papers, so download the PDF into its
+  own directory and add it with `zotero_add_from_file(if_exists="file")`.
+  That tool reads the DOI from the PDF and attaches the file to the item with
+  that DOI, creating the item from the DOI if it isn't in the library yet.
+  - It needs PyMuPDF in the Zotero MCP's environment (step 0). Without it,
+    or when the DOI isn't in the PDF's metadata or on its first page, it
+    creates a separate item with no metadata instead.
+  - So when the DOI isn't on the first page, write it into a copy of the
+    PDF's metadata first, using the MCP's Python:
+
+    ```bash
+    ~/.local/share/uv/tools/zotero-mcp-server/bin/python -I -c '
+    import sys, pymupdf
+    d = pymupdf.open(sys.argv[1]); m = d.metadata or {}
+    m["subject"] = sys.argv[2]; d.set_metadata(m); d.save(sys.argv[3])
+    ' in.pdf 10.xxxx/yyyy tagged/out.pdf
+    ```
+
+  - Check that the result names the expected item key and DOI. A report
+    with no DOI gets its own item: pass `title` and `item_type="report"`.
 - **Tag** each item with the quantities it reports (for example
   `sediment-carbon`, `shoot-density`).
 - **Check retractions:** `scite_check_retractions` on the collection. Drop
@@ -151,9 +179,9 @@ paywall.
 2. **One paper at a time,** in a new tab: open the article page through
    that route and download the PDF, after the developer has approved
    downloading it. Read it locally and check it's the right paper, then
-   handle it as in step 4 ("PDFs"). Claude in Chrome can't use the Zotero
-   Connector: its toolbar button and keyboard shortcut are handled by
-   Chrome, outside the page.
+   add it to Zotero as in step 4 ("Every paper read has its PDF in
+   Zotero"). Claude in Chrome can't use the Zotero Connector: its toolbar
+   button and keyboard shortcut are handled by Chrome, outside the page.
 3. **Stop and hand over to the developer** at any sign-in, single sign-on,
    two-factor or CAPTCHA page. Continue after they have signed in.
 4. **Never pay.** Stop at any purchase, "buy article" or rental page and
