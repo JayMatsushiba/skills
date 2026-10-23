@@ -135,10 +135,11 @@ queries run: it goes in the note, so absence claims say what was searched.
   That tool reads the DOI from the PDF and attaches the file to the item with
   that DOI, creating the item from the DOI if it isn't in the library yet.
   - It needs PyMuPDF in the Zotero MCP's environment (step 0). Without it,
-    or when the DOI isn't in the PDF's metadata or on its first page, it
-    creates a separate item with no metadata instead.
-  - So when the DOI isn't on the first page, write it into a copy of the
-    PDF's metadata first, using the MCP's Python:
+    or when it can't read the DOI from the PDF, it creates a separate item
+    with no metadata instead. Publisher PDFs often print the DOI in a way
+    it can't read, even on the first page.
+  - So always write the DOI into a copy of the PDF's metadata first, using
+    the MCP's Python:
 
     ```bash
     ~/.local/share/uv/tools/zotero-mcp-server/bin/python -I -c '
@@ -182,6 +183,16 @@ paywall.
    add it to Zotero as in step 4 ("Every paper read has its PDF in
    Zotero"). Claude in Chrome can't use the Zotero Connector: its toolbar
    button and keyboard shortcut are handled by Chrome, outside the page.
+   - Don't use the download button in Chrome's PDF viewer: it always opens
+     a "Save as" dialog, which Claude can't operate. Instead, with the PDF
+     open in a tab, start a normal link download with `javascript_tool`:
+     `const a = document.createElement('a'); a.href = location.href;
+     a.download = 'paper.pdf'; document.body.appendChild(a); a.click();`
+     The file lands in the default downloads folder without a dialog
+     (provided Chrome's "Ask where to save each file" setting is off). Move
+     it into the review's own download directory before reading it.
+   - Reading the full text on the publisher's HTML page is fine, but
+     download the PDF too.
 3. **Stop and hand over to the developer** at any sign-in, single sign-on,
    two-factor or CAPTCHA page. Continue after they have signed in.
 4. **Never pay.** Stop at any purchase, "buy article" or rental page and
