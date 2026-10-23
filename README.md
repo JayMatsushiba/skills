@@ -126,7 +126,9 @@ The skills need:
 - for `/literature-review`: web search, and a Zotero MCP server connected to
   the developer's library (for adding papers, reading PDFs and checking
   retractions). Without Zotero it can still search and read open-access
-  papers, but keeps no library and says so.
+  papers, but keeps no library and says so. Optionally, Claude in Chrome
+  fetches paywalled papers through the developer's own journal access, one
+  at a time, stopping at sign-ins and payment pages.
 
 ## Personal settings
 

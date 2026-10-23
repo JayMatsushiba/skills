@@ -1,7 +1,7 @@
 ---
 name: literature-review
-description: Find, collect and extract values from published literature for a project question, with every number traced to a paper that was actually read. Scopes the quantities needed, checks the developer's Zotero library and connectors for what's already there, searches the web (reviews first, then regional studies, then citations), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, extracts each value with units, site, method and page or table, and delivers a values table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", or to look up parameters, conversion factors or reference ranges for an analysis.
-argument-hint: "<issue number or topic> [--collection <name>] [--open-access-only] [--no-connectors]"
+description: Find, collect and extract values from published literature for a project question, with every number traced to a paper that was actually read. Scopes the quantities needed, checks the developer's Zotero library and connectors for what's already there, searches the web (reviews first, then regional studies, then citations), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, fetches paywalled papers through Claude in Chrome when the developer has legitimate access, extracts each value with units, site, method and page or table, and delivers a values table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", or to look up parameters, conversion factors or reference ranges for an analysis.
+argument-hint: "<issue number or topic> [--collection <name>] [--open-access-only] [--no-connectors] [--no-browser]"
 ---
 
 # Literature review
@@ -77,9 +77,43 @@ queries run: it goes in the note, so absence claims say what was searched.
 - **Check retractions:** `scite_check_retractions` on the collection. Drop
   retracted papers from the table and say so.
 - **Find missing full texts:** `zotero_library_coverage` on the collection.
-  List the paywalled papers for the developer, who may have institutional
-  access and can add the PDFs to Zotero. With `--open-access-only`, skip
-  them and say which values that leaves out.
+  For each paper without a PDF, try the legal open routes first: the
+  author's manuscript in an institutional repository or preprint server,
+  then the publisher's open-access version. With `--open-access-only`,
+  stop there and say which values that leaves out.
+- **Fetch paywalled papers through the browser** (step 4a), if the
+  developer has access. Otherwise list them for the developer, who can ask
+  the authors or a partner with access, or add the PDFs to Zotero by hand.
+
+### 4a. Paywalled papers through Claude in Chrome
+
+Use this only when Claude in Chrome is connected (its tools are named
+`mcp__claude-in-chrome__*`; read the `chrome-browser` skill first) and the
+developer has confirmed they have legitimate access: an institutional or
+library login, a library proxy, or a personal subscription. Skip it with
+`--no-browser`. This uses the developer's own access; it never gets round a
+paywall.
+
+1. **Ask once which access route to use** (for example "University library
+   proxy" or "publisher login"), and whether the Zotero Connector is
+   installed in that Chrome. Note the answer for the rest of the review.
+2. **One paper at a time,** in a new tab: open the article page through
+   that route, open the PDF, and save it to the Zotero item (with the
+   Zotero Connector, or by downloading it and attaching it with
+   `zotero_add_from_file`). Check the saved PDF is the right paper.
+3. **Stop and hand over to the developer** at any sign-in, single sign-on,
+   two-factor or CAPTCHA page. Continue after they have signed in.
+4. **Never pay.** Stop at any purchase, "buy article" or rental page and
+   list the paper as not accessible.
+5. **Stay small.** Fetch only the papers this review needs, at the pace a
+   person would. Publisher licences usually forbid automated bulk
+   downloading, and too many downloads can get the developer's institution
+   blocked. No crawling, no downloading whole issues or reference lists.
+6. **Record the route** for each PDF in the extraction table's `access`
+   column (`full text via library proxy`).
+
+Never use shadow libraries or other unlicensed copies (for example
+Sci-Hub or LibGen), even if a search result points to one.
 
 Zotero is the developer's own library: add items, tags, notes and
 collections, but don't delete, merge or edit existing items without asking.
@@ -87,7 +121,8 @@ collections, but don't delete, merge or edit existing items without asking.
 ## 5. Read and extract
 
 Read each paper's full text: `zotero_get_item_fulltext` or
-`zotero_read_pdf_pages` for PDFs in Zotero, `WebFetch` for open-access pages.
+`zotero_read_pdf_pages` for PDFs in Zotero (including those fetched in step
+4a), `WebFetch` for open-access pages.
 If only the abstract is available, a value can be taken from it but is marked
 `abstract only`.
 
@@ -156,6 +191,9 @@ page.
   title and authors before citing it.
 - **Outside sources are read-only,** apart from adding items, tags, notes
   and collections to the developer's Zotero library.
+- **Only licensed access.** Paywalled papers come through the developer's
+  own access (step 4a) or from the authors, never from shadow libraries,
+  and never by paying.
 
 ## Hand back
 
@@ -163,5 +201,6 @@ Reply with:
 
 - the answer per quantity (value or range to use) and its main source
 - the files written, the Zotero collection and the number of papers in it
-- paywalled papers the developer could add, and what they would change
+- paywalled papers fetched through the browser, and those still missing
+  with what they would change
 - gaps, disagreements and open questions
