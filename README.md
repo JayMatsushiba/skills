@@ -83,6 +83,7 @@ project, where it was first used.
 | [`work-item`](work-item/SKILL.md) | 4, 6, 7, 8 | Takes one issue through branch, PR, agent and developer feedback, rebase and squash-merge |
 | [`pr-review`](pr-review/SKILL.md) | 5 | Starts the content and code review agents on a PR and posts their findings |
 | [`content-review`](content-review/SKILL.md) | 5 | Reviews report prose as a project manager would read it |
+| [`literature-review`](literature-review/SKILL.md) | 4 | Collects published values for a work item: searches, adds papers to Zotero, extracts each number with its source and page, and writes a values table and note |
 
 `/code-review` is built into Claude Code, so it isn't in this repo.
 
@@ -122,6 +123,10 @@ The skills need:
 - the Google Drive, Gmail and Slack connectors, for `/project-readme`. Without
   them it uses `docs/`, Obsidian and my notes only, and says so.
 - optionally, an Obsidian vault. See [Personal settings](#personal-settings).
+- for `/literature-review`: web search, and a Zotero MCP server connected to
+  the developer's library (for adding papers, reading PDFs and checking
+  retractions). Without Zotero it can still search and read open-access
+  papers, but keeps no library and says so.
 
 ## Personal settings
 
