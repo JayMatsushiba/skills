@@ -1,6 +1,6 @@
 ---
 name: literature-review
-description: Find, collect and extract values from published literature for a project question, with every number traced to a paper that was actually read. Scopes the quantities needed, checks the developer's Zotero library and connectors for what's already there, searches the web (reviews first, then regional studies, then citations), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, fetches paywalled papers through Claude in Chrome when the developer has legitimate access, extracts each value with units, site, method and page or table, and delivers a values table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", or to look up parameters, conversion factors or reference ranges for an analysis.
+description: Find, collect and extract values from published literature for a project question, with every number traced to a paper that was actually read. Scopes the quantities needed, checks the developer's Zotero library and connectors for what's already there, searches the web (reviews first, then regional studies, local grey literature, and for key papers their references, citing papers, authors' later work and synthesis databases), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, hands paywalled or blocked papers to the developer as DOI links and merges the duplicates that follow, extracts each value with units, site, method and page or table after checking the method behind it, and delivers a values table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", or to look up parameters, conversion factors or reference ranges for an analysis.
 argument-hint: "<issue number or topic> [--collection <name>] [--open-access-only] [--no-connectors] [--no-browser]"
 ---
 
@@ -241,8 +241,11 @@ yourself before reporting it, and say which rows you checked.
   then the publisher's open-access version. With `--open-access-only`,
   stop there and say which values that leaves out.
 - **Fetch paywalled papers through the browser** (step 4a), if the
-  developer has access. Otherwise list them for the developer, who can ask
-  the authors or a partner with access, or add the PDFs to Zotero by hand.
+  developer has access. Otherwise hand them to the developer (step 4b).
+- **Don't get round bot checks.** If a repository or publisher returns a
+  bot check, CAPTCHA or 403, don't retry with a spoofed user agent,
+  browser headers or another trick. List the paper for the developer
+  (step 4b).
 
 ### 4a. Paywalled papers through Claude in Chrome
 
@@ -287,10 +290,55 @@ paywall.
 Never use shadow libraries or other unlicensed copies (for example
 Sci-Hub or LibGen), even if a search result points to one.
 
+### 4b. Hand missing papers to the developer
+
+When the legal open routes fail and the browser route isn't available,
+give the developer a list they can work through with their own access:
+
+- **One link per paper:** `https://doi.org/<DOI>`, with author, year, a
+  few words on what it would add, and the existing Zotero item key, so
+  they attach the PDF to that item instead of creating a new one.
+- **Check each DOI against Crossref** (`api.crossref.org/works/<DOI>`)
+  before listing it. Citing papers sometimes print a wrong DOI; give the
+  correct one and say so.
+- **Group the list:** paywalled; blocked by a bot check (often open access
+  in a normal browser); no DOI (reports, with title, publisher and the
+  last known URL). Put first the papers that would change the answer.
+- **Signed or expiring download links** (for example cloud storage URLs
+  with `X-Amz-Expires`) stop working within minutes. Identify the document
+  from the filename in the link instead of downloading it, and ask the
+  developer to add it to Zotero if it's needed.
+
+When the developer says they've added PDFs, list the collection again
+before reading: the PDF may sit on the developer's own copy of the item,
+not on the key you created (step 4c).
+
+### 4c. Clean up duplicates
+
+Adding PDFs through the Zotero Connector creates new items next to the
+ones this review created. After each round of additions, and before
+saying any item lacks a PDF:
+
+1. **Find them:** `zotero_find_duplicates(collection_key=..., method="both")`.
+   A library-wide scan can include items already in the trash; check the
+   `deleted` flag before acting on one.
+2. **Pick the keeper:** the copy with the PDF and fuller metadata, or the
+   one with supplementary files if both have the main PDF.
+3. **Merge:** `zotero_merge_duplicates` as a dry run first, then with
+   `confirm=True`. Tags, collections, notes and attachments move to the
+   keeper; the other copies go to the trash, where they can be restored.
+4. **Check skipped attachments.** If the merge reports "duplicate
+   attachments skipped", compare the files' MD5 (`md5` in the attachment
+   data) to confirm nothing was lost.
+5. **Check again after sync** with `zotero_find_duplicates`, and list the
+   item keys kept and trashed in the hand-back.
+
 Zotero is the developer's own library: add items, tags, notes and
-collections, but don't delete, merge or edit existing items without asking.
-Items this review created by mistake (duplicates, failed imports) may be
-moved to the Zotero trash with `zotero_delete_item`. Say which ones, and
+collections freely. Merge duplicates inside the review's collection, and
+items this review created, as above. Don't delete, merge or edit other
+existing items, including duplicates outside the collection, unless the
+developer asks. Items this review created by mistake (failed imports) may
+be moved to the Zotero trash with `zotero_delete_item`. Say which ones, and
 never empty the trash.
 
 ## 5. Read and extract
@@ -386,8 +434,11 @@ page.
 - **Outside sources are read-only,** apart from adding items, tags, notes
   and collections to the developer's Zotero library.
 - **Only licensed access.** Paywalled papers come through the developer's
-  own access (step 4a) or from the authors, never from shadow libraries,
-  and never by paying.
+  own access (steps 4a and 4b) or from the authors, never from shadow
+  libraries, never by getting round bot checks, and never by paying.
+- **Check agents' work.** Numbers from search agents, including
+  `deep-research`, are checked against the PDF before they change the
+  answer.
 
 ## Hand back
 
@@ -395,7 +446,9 @@ Reply with:
 
 - the answer per quantity (value or range to use) and its main source
 - the files written, the Zotero collection and the number of papers in it
-- paywalled papers fetched through the browser, and those still missing
-  with what they would change
+- paywalled papers fetched through the browser, and the step 4b list of
+  those still missing, with what they would change
+- duplicates merged (keys kept and trashed)
 - for each key paper, the trail followed (step 3a) and what it changed
+- which numbers you checked against the PDF yourself
 - gaps, disagreements and open questions
