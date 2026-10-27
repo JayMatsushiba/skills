@@ -121,10 +121,21 @@ Search in this order, and run independent searches in parallel:
    For the quantities that drive the result, this is step 3a and is
    required.
 4. **Local and grey literature** near the site: reports by councils,
-   statutory agencies, NGOs and universities, and theses. Search the names
-   of neighbouring sites and the wider area (bay, estuary, protected area),
-   not only the site itself: a core from the next bay is worth more than a
-   regional mean.
+   statutory agencies, NGOs, consultancies and universities, and theses.
+   These often hold the only site measurements and rarely show up in
+   journal searches. Search the names of neighbouring sites and the wider
+   area (bay, estuary, protected area), not only the site itself: a core
+   from the next bay is worth more than a regional mean. Look on the
+   project pages of the organisation that commissioned the work, and
+   follow each report's own citations to the primary report behind its
+   numbers.
+
+   **Dead links happen.** Record the old URL, then try the web archive's
+   capture list for it and the organisation's current project pages. If
+   that fails, stop: take the values as a later report reproduces them
+   (and say so), and list the report as a request to its author or the
+   organisation, as a GitHub issue or a draft email for the developer.
+   Don't spend long hunting.
 
 Use `WebSearch` in standard mode first, and extended mode for niche or
 hard-to-find topics. For a broad topic with many sub-questions, the
@@ -158,15 +169,28 @@ result. For each one:
 4. **Follow the authors.** Search each author's later papers, theses
    (institutional repositories) and reports, and the research group's
    reports. Later work often adds sites, deeper cores or corrections.
-5. **Look for recalculations.** If a later source recomputes the key
+5. **Read the syntheses the newer papers cite.** A citing paper's
+   introduction often names a recent review or synthesis that searches
+   missed. Read it, and check whether it publishes its underlying
+   database (Figshare, Zenodo, a data repository). If it does, download it
+   and query it directly: filter to the species and region for a
+   benchmark, and test the step 1 assumptions where the data allow. Say so
+   when the data can't test a question (for example, too few rows with
+   both variables).
+6. **Look for recalculations.** If a later source recomputes the key
    paper's values with a different method, record both and the reason
    they differ.
 
 Record the trail for each key paper in the note: references screened and
-read, citing papers screened and read, author searches run, and papers not
-accessible. Independent trails (backward, forward, authors) can run as
-parallel agents; check the numbers that change the answer against the PDF
-yourself before using them.
+read, citing papers screened and read, author searches run, databases
+queried, and papers not accessible.
+
+**Parallel agents.** The backward, forward and author trails are
+independent and can run as parallel agents. Give each one the skill, the
+collection, the papers already held, and a separate output CSV and query
+log. Agents report in the same confident tone whether or not they're
+right, so check every number that changes the answer against the PDF
+yourself before reporting it, and say which rows you checked.
 
 ## 4. Collect in Zotero
 
@@ -303,6 +327,23 @@ Rules:
   step 6.
 - **Quote sparingly.** A short quote for a key definition or method is fine;
   don't copy whole tables or paragraphs into the repo.
+
+**Check the method behind each number** before it goes in the table:
+
+- **Conversions.** How was the value derived? For example, organic carbon
+  from loss on ignition depends on the conversion equation: a local
+  regression, a global one, or an elemental analyser. Record which one in
+  `method`.
+- **What was measured.** Organic matter is not organic carbon, content per
+  volume is not a stock over a depth, and a stock to 1 m may be
+  extrapolated from 30 cm. If the methods don't say, note it and don't
+  compare the value with the others.
+- **Implausible values.** A value far outside every other source, or units
+  that don't fit, usually means a scaling or units error. Flag it in
+  `notes` and leave it out of the synthesis.
+- **Independent checks.** Prefer studies that compare methods on the same
+  samples (for example, conversion equations against an elemental
+  analyser); they show which way a method biases the number.
 
 ## 6. Synthesise
 
