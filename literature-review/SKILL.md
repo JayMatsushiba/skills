@@ -79,11 +79,21 @@ Before searching, write down what's needed, from the issue, `SPEC.md` and
 - **Context that makes a value comparable.** Species, region, habitat,
   depth, season, and the method conventions that change the number (core
   depth, dry vs wet mass, above- vs below-ground).
+- **Assumptions behind the values.** How the analysis will apply each
+  value, written as questions the literature can answer. For example,
+  "one stock per hectare for the whole meadow" assumes the stock doesn't
+  vary with shoot density, cover or depth; "is that true?" is part of the
+  review.
+- **Weight.** How much each quantity moves the result. Where the analysis
+  already exists, take this from its sensitivity analysis; otherwise
+  estimate it. Quantities that drive the result get the deep search in
+  step 3a; minor ones may stop at a review value.
 - **Starting points.** Papers already named in the issue or by people on
   the project. Treat any that came from memory, including your own, as
   unverified until found and read.
 - **Done when.** Usually: at least one sourced value or range per quantity,
-  or a clear statement that none was found and what was searched.
+  or a clear statement that none was found and what was searched. For the
+  quantities that drive the result, also: step 3a done and recorded.
 
 Put this list at the top of the note (step 6), and in the issue if it
 changes the issue's scope.
@@ -108,14 +118,55 @@ Search in this order, and run independent searches in parallel:
    comparable sites, then wider regions if nothing close exists.
 3. **Citations:** follow the best papers backwards (their references) and
    forwards (`scite_enrich_item` or a web search for papers citing them).
+   For the quantities that drive the result, this is step 3a and is
+   required.
+4. **Local and grey literature** near the site: reports by councils,
+   statutory agencies, NGOs and universities, and theses. Search the names
+   of neighbouring sites and the wider area (bay, estuary, protected area),
+   not only the site itself: a core from the next bay is worth more than a
+   regional mean.
 
 Use `WebSearch` in standard mode first, and extended mode for niche or
 hard-to-find topics. For a broad topic with many sub-questions, the
 `deep-research` skill can run several search agents in parallel; check its
 sources the same way before using any number from it.
 
-Stop when new searches only return papers already found. Keep a list of the
-queries run: it goes in the note, so absence claims say what was searched.
+Don't stop at the first usable number. Stop when new searches only return
+papers already found and, for the quantities that drive the result, step
+3a is done. Keep a list of the queries run: it goes in the note, so absence
+claims say what was searched.
+
+### 3a. Key papers: read deeply and follow every lead
+
+A key paper is one that supplies a value for a quantity that drives the
+result. For each one:
+
+1. **Extract everything in scope, not only the headline value.** Every
+   quantity from step 1, the relationships the authors tested between
+   them (including weak or null results, with R², p and n), site-level
+   values, and the method choices that change the number (conversion
+   equations such as loss on ignition to organic carbon, core depth,
+   extrapolation). A null result can answer an assumption from step 1.
+2. **Screen the whole reference list.** Read each reference's title and
+   decide: read, skip, or not accessible, with a reason. Read every one
+   that reports the same quantities, tests what drives them, or covers the
+   same region.
+3. **Find the papers citing it** (`scite_enrich_item`, then a web search
+   such as "cited by" on Google Scholar, Semantic Scholar or OpenAlex).
+   Screen them the same way, looking first for newer measurements in the
+   same region and for re-analyses of the key paper's data.
+4. **Follow the authors.** Search each author's later papers, theses
+   (institutional repositories) and reports, and the research group's
+   reports. Later work often adds sites, deeper cores or corrections.
+5. **Look for recalculations.** If a later source recomputes the key
+   paper's values with a different method, record both and the reason
+   they differ.
+
+Record the trail for each key paper in the note: references screened and
+read, citing papers screened and read, author searches run, and papers not
+accessible. Independent trails (backward, forward, authors) can run as
+parallel agents; check the numbers that change the answer against the PDF
+yourself before using them.
 
 ## 4. Collect in Zotero
 
@@ -261,10 +312,12 @@ Write a short note that a project manager can read:
    (closest site, same convention, largest sample).
 2. **Where the sources disagree,** and what the disagreement depends on
    (core depth, season, method).
-3. **Gaps:** quantities with no suitable value, what was searched (the query
+3. **The assumptions from step 1,** each answered with what the
+   literature found, or marked untested.
+4. **Gaps:** quantities with no suitable value, what was searched (the query
    list from step 3), and what would fill the gap (a site measurement, a
    partner's data, a paywalled paper).
-4. **Caveats** that carry into the analysis, such as values from other
+5. **Caveats** that carry into the analysis, such as values from other
    regions or from abstracts only.
 
 Plain language, absolute dates, qualified absence claims ("the searched
@@ -303,4 +356,5 @@ Reply with:
 - the files written, the Zotero collection and the number of papers in it
 - paywalled papers fetched through the browser, and those still missing
   with what they would change
+- for each key paper, the trail followed (step 3a) and what it changed
 - gaps, disagreements and open questions
