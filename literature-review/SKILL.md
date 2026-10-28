@@ -1,15 +1,36 @@
 ---
 name: literature-review
-description: Find, collect and extract values from published literature for a project question, with every number traced to a paper that was actually read. Scopes the quantities needed, checks the developer's Zotero library and connectors for what's already there, searches the web (reviews first, then regional studies, local grey literature, and for key papers their references, citing papers, authors' later work and synthesis databases), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, hands paywalled or blocked papers to the developer as DOI links and merges the duplicates that follow, extracts each value with units, site, method and page or table after checking the method behind it, and delivers a values table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", or to look up parameters, conversion factors or reference ranges for an analysis.
-argument-hint: "<issue number or topic> [--collection <name>] [--open-access-only] [--no-connectors] [--no-browser]"
+description: Find, collect and extract published literature for a project question, with every value, method detail or claim traced to a paper that was actually read. Handles three kinds of review — values (parameters, conversion factors, reference ranges), methods (how to measure, estimate or model something, compared on accuracy and fit to the project's data) and theory (frameworks, mechanisms and conceptual models, with the evidence for and against each claim). Scopes what's needed, checks the developer's Zotero library and connectors, searches the web (reviews and standards first, then primary studies, local grey literature, and for key papers their references, citing papers, authors' later work and synthesis databases), adds papers to a Zotero collection by DOI with open-access PDFs and retraction checks, hands paywalled or blocked papers to the developer as DOI links and merges the duplicates that follow, extracts into a table after checking the evidence behind each row, and delivers the table and a short note. Use when an issue or the SPEC asks to "compile published values", "find something in the literature", "do a literature review", "which method should we use", "compare approaches", "find a protocol", "what framework/theory explains", "build a conceptual model", or to look up parameters, conversion factors or reference ranges for an analysis.
+argument-hint: "<issue number or topic> [--type values|methods|theory] [--collection <name>] [--open-access-only] [--no-connectors] [--no-browser]"
 ---
 
 # Literature review
 
-Turns a question ("what is the sediment carbon stock of a *Zostera marina*
-meadow?") into a table of published values the analysis can use, and a short
-note saying which values to use and why. Every number in the table comes from
-a paper that was read for this review, never from memory.
+Turns a project question into a table the analysis can use and a short note
+saying what to use and why. There are three kinds of review:
+
+| Type | Question | Table | Reference |
+|---|---|---|---|
+| `values` | "what is the sediment carbon stock of a *Zostera marina* meadow?" | one row per value | [references/values.md](references/values.md) |
+| `methods` | "how should we map meadow extent from drone imagery?" | one row per method per study | [references/methods.md](references/methods.md) |
+| `theory` | "what explains how disturbance affects seagrass recovery?" | one row per claim, one per test of it | [references/theory.md](references/theory.md) |
+
+Everything in the table comes from a paper read for this review, never from
+memory.
+
+**Pick the type** from `--type`, or from the request: numbers, parameters
+and ranges are `values`; "how to measure", "which method", protocols and
+models are `methods`; "why", frameworks, mechanisms and conceptual models
+are `theory`. Say which type you chose. Then read its reference file before
+step 1: it gives the type's scoping, search order, extraction columns,
+evidence checks, synthesis and deliverables. The steps below are shared.
+
+**Mixed reviews.** A question can need more than one type, for example a
+method and the values it produces. Pass `--type methods,values`, read each
+reference file, and work in the order theory, methods, values: the theory
+says what to measure, the method says how, and the values come from studies
+using that method. Use one Zotero collection, one table per type and one
+note.
 
 When the request is a GitHub issue, run this inside `/work-item <issue>`: the
 table and note are the work item's output, and they go through the usual PR,
@@ -70,30 +91,21 @@ the web API and reach the local app when it syncs.
 ## 1. Scope the question
 
 Before searching, write down what's needed, from the issue, `SPEC.md` and
-`README.md`:
+`README.md`. The reference file says what to list for the type (quantities,
+the job a method must do, or what a theory is for). For every type, also
+write down:
 
-- **Quantities.** Each value the analysis needs, with its units and
-  convention. For example: sediment organic carbon stock (Mg C ha⁻¹, to
-  what depth?), shoot density (shoots m⁻²), height-to-biomass relationship,
-  carbon fraction of dry mass.
-- **Context that makes a value comparable.** Species, region, habitat,
-  depth, season, and the method conventions that change the number (core
-  depth, dry vs wet mass, above- vs below-ground).
-- **Assumptions behind the values.** How the analysis will apply each
-  value, written as questions the literature can answer. For example,
-  "one stock per hectare for the whole meadow" assumes the stock doesn't
-  vary with shoot density, cover or depth; "is that true?" is part of the
-  review.
-- **Weight.** How much each quantity moves the result. Where the analysis
+- **Assumptions.** How the analysis will use what the review finds,
+  written as questions the literature can answer.
+- **Weight.** How much each item moves the result. Where the analysis
   already exists, take this from its sensitivity analysis; otherwise
-  estimate it. Quantities that drive the result get the deep search in
-  step 3a; minor ones may stop at a review value.
+  estimate it. Items that drive the result get the deep search in step
+  3a; minor ones may stop at a review.
 - **Starting points.** Papers already named in the issue or by people on
   the project. Treat any that came from memory, including your own, as
   unverified until found and read.
-- **Done when.** Usually: at least one sourced value or range per quantity,
-  or a clear statement that none was found and what was searched. For the
-  quantities that drive the result, also: step 3a done and recorded.
+- **Done when.** The reference file gives the usual criterion. For the
+  items that drive the result, also: step 3a done and recorded.
 
 Put this list at the top of the note (step 6), and in the issue if it
 changes the issue's scope.
@@ -110,25 +122,21 @@ changes the issue's scope.
 
 ## 3. Search
 
-Search in this order, and run independent searches in parallel:
+Search in the order the reference file gives, and run independent searches
+in parallel. Every type starts with the sources that summarise a field
+(reviews, standards, founding sources) and ends with these two:
 
-1. **Reviews and meta-analyses** for each quantity. They give ranges and
-   point to the primary studies.
-2. **Regional primary studies:** the same species and the nearest
-   comparable sites, then wider regions if nothing close exists.
-3. **Citations:** follow the best papers backwards (their references) and
-   forwards (`scite_enrich_item` or a web search for papers citing them).
-   For the quantities that drive the result, this is step 3a and is
-   required.
-4. **Local and grey literature** near the site: reports by councils,
-   statutory agencies, NGOs, consultancies and universities, and theses.
-   These often hold the only site measurements and rarely show up in
-   journal searches. Search the names of neighbouring sites and the wider
-   area (bay, estuary, protected area), not only the site itself: a core
-   from the next bay is worth more than a regional mean. Look on the
-   project pages of the organisation that commissioned the work, and
-   follow each report's own citations to the primary report behind its
-   numbers.
+- **Citations:** follow the best papers backwards (their references) and
+  forwards (`scite_enrich_item` or a web search for papers citing them).
+  For the items that drive the result, this is step 3a and is required.
+- **Local and grey literature** near the site: reports by councils,
+  statutory agencies, NGOs, consultancies and universities, and theses.
+  These often hold the only site measurements, the methods actually used
+  nearby, and tests in the project's own system, and rarely show up in
+  journal searches. Search the names of neighbouring sites and the wider
+  area (bay, estuary, protected area), not only the site itself. Look on
+  the project pages of the organisation that commissioned the work, and
+  follow each report's own citations to the primary report behind it.
 
    **Dead links happen.** Record the old URL, then try the web archive's
    capture list for it and the organisation's current project pages. If
@@ -140,46 +148,44 @@ Search in this order, and run independent searches in parallel:
 Use `WebSearch` in standard mode first, and extended mode for niche or
 hard-to-find topics. For a broad topic with many sub-questions, the
 `deep-research` skill can run several search agents in parallel; check its
-sources the same way before using any number from it.
+sources the same way before using anything from it.
 
-Don't stop at the first usable number. Stop when new searches only return
-papers already found and, for the quantities that drive the result, step
-3a is done. Keep a list of the queries run: it goes in the note, so absence
+Don't stop at the first usable source. Stop when new searches only return
+papers already found and, for the items that drive the result, step 3a is
+done. Keep a list of the queries run: it goes in the note, so absence
 claims say what was searched.
 
 ### 3a. Key papers: read deeply and follow every lead
 
-A key paper is one that supplies a value for a quantity that drives the
-result. For each one:
+A key paper is one that supplies a value, method or claim the result
+depends on; the reference file says which papers count for its type. For
+each one:
 
-1. **Extract everything in scope, not only the headline value.** Every
-   quantity from step 1, the relationships the authors tested between
-   them (including weak or null results, with R², p and n), site-level
-   values, and the method choices that change the number (conversion
-   equations such as loss on ignition to organic carbon, core depth,
-   extrapolation). A null result can answer an assumption from step 1.
+1. **Extract everything in scope, not only the headline.** Everything from
+   step 1 the paper reports, including weak or null results. A null result
+   can answer an assumption from step 1.
 2. **Screen the whole reference list.** Read each reference's title and
    decide: read, skip, or not accessible, with a reason. Read every one
-   that reports the same quantities, tests what drives them, or covers the
-   same region.
+   that covers the same items, tests what drives them, or covers the same
+   region or system.
 3. **Find the papers citing it** (`scite_enrich_item`, then a web search
    such as "cited by" on Google Scholar, Semantic Scholar or OpenAlex).
-   Screen them the same way, looking first for newer measurements in the
-   same region and for re-analyses of the key paper's data.
+   Screen them the same way. The reference file says what to look for
+   first.
 4. **Follow the authors.** Search each author's later papers, theses
    (institutional repositories) and reports, and the research group's
-   reports. Later work often adds sites, deeper cores or corrections.
+   reports. Later work often adds sites, revises a method or answers
+   critics.
 5. **Read the syntheses the newer papers cite.** A citing paper's
    introduction often names a recent review or synthesis that searches
    missed. Read it, and check whether it publishes its underlying
    database (Figshare, Zenodo, a data repository). If it does, download it
-   and query it directly: filter to the species and region for a
-   benchmark, and test the step 1 assumptions where the data allow. Say so
-   when the data can't test a question (for example, too few rows with
-   both variables).
-6. **Look for recalculations.** If a later source recomputes the key
-   paper's values with a different method, record both and the reason
-   they differ.
+   and query it directly: filter to the species and region, and test the
+   step 1 assumptions where the data allow. Say so when the data can't
+   test a question (for example, too few rows with both variables).
+6. **Look for revisions.** If a later source recomputes the key paper's
+   values, revises its method or restates its claims, record both and the
+   reason they differ.
 
 Record the trail for each key paper in the note: references screened and
 read, citing papers screened and read, author searches run, databases
@@ -189,8 +195,8 @@ queried, and papers not accessible.
 independent and can run as parallel agents. Give each one the skill, the
 collection, the papers already held, and a separate output CSV and query
 log. Agents report in the same confident tone whether or not they're
-right, so check every number that changes the answer against the PDF
-yourself before reporting it, and say which rows you checked.
+right, so check every row that changes the answer against the PDF yourself
+before reporting it, and say which rows you checked.
 
 ## 4. Collect in Zotero
 
@@ -231,8 +237,9 @@ yourself before reporting it, and say which rows you checked.
   4. Check with `zotero_library_coverage` once Zotero desktop has synced,
      and read page 1 of one PDF with `zotero_read_pdf_pages` to confirm
      the file itself arrived.
-- **Tag** each item with the quantities it reports (for example
-  `sediment-carbon`, `shoot-density`).
+- **Tag** each item with the review type and what it covers (for example
+  `values`, `sediment-carbon`; `methods`, `drone-mapping`; `theory`,
+  `alternative-stable-states`).
 - **Check retractions:** `scite_check_retractions` on the collection. Drop
   retracted papers from the table and say so.
 - **Find missing full texts:** `zotero_library_coverage` on the collection.
@@ -346,78 +353,56 @@ never empty the trash.
 Read each paper's full text: `zotero_get_item_fulltext` or
 `zotero_read_pdf_pages` for PDFs in Zotero (including those fetched in step
 4a), `WebFetch` for open-access pages.
-If only the abstract is available, a value can be taken from it but is marked
+If only the abstract is available, a row can be taken from it but is marked
 `abstract only`.
 
-For each value, record one row:
+Record one row per item in the columns the reference file gives. Every
+table has `source` (Zotero key or citation key, and DOI), `location` (table,
+figure or page), `access` (full text, abstract only, or the route used) and
+`notes` (anything that limits comparability).
 
-| Column | Example (made up) |
-|---|---|
-| `quantity` | sediment organic carbon stock |
-| `value`, `low`, `high` | 140, 90, 190 |
-| `spread` | SD, SE, range or IQR, and `n` |
-| `units` | Mg C ha⁻¹ |
-| `convention` | top 100 cm, extrapolated from 30 cm cores |
-| `species`, `site`, `region` | *Z. marina*, Studland Bay, England |
-| `habitat`, `depth_m`, `date` | subtidal, 2–4, summer 2018 |
-| `method` | loss on ignition, converted with … |
-| `source` | Zotero key or citation key, and DOI |
-| `location` | Table 2, p. 7 |
-| `access` | full text / abstract only |
-| `notes` | anything that limits comparability |
+Rules for every type:
 
-Rules:
-
-- **Copy numbers exactly** as printed, with their units. Do unit
-  conversions in separate columns, with the formula, so they can be
-  checked.
-- **Don't average across papers** in the extraction table. Synthesis is
-  step 6.
-- **Quote sparingly.** A short quote for a key definition or method is fine;
-  don't copy whole tables or paragraphs into the repo.
-
-**Check the method behind each number** before it goes in the table:
-
-- **Conversions.** How was the value derived? For example, organic carbon
-  from loss on ignition depends on the conversion equation: a local
-  regression, a global one, or an elemental analyser. Record which one in
-  `method`.
-- **What was measured.** Organic matter is not organic carbon, content per
-  volume is not a stock over a depth, and a stock to 1 m may be
-  extrapolated from 30 cm. If the methods don't say, note it and don't
-  compare the value with the others.
-- **Implausible values.** A value far outside every other source, or units
-  that don't fit, usually means a scaling or units error. Flag it in
-  `notes` and leave it out of the synthesis.
-- **Independent checks.** Prefer studies that compare methods on the same
-  samples (for example, conversion equations against an elemental
-  analyser); they show which way a method biases the number.
+- **Copy as printed.** Numbers with their units and metrics, definitions
+  and claims as the source states them. Conversions and paraphrases go in
+  separate columns, so they can be checked.
+- **Don't combine across papers** in the extraction table. Averaging,
+  ranking and weighing evidence are step 6.
+- **Quote sparingly.** A short quote for a key definition, method or claim
+  is fine; don't copy whole tables or paragraphs into the repo.
+- **Check the evidence behind each row** before it goes in the table, with
+  the checks in the reference file: how a number was derived, how a method
+  was validated, or whether a study really tested a claim. A row that fails
+  a check stays in the table with the reason in `notes`, and is left out of
+  the synthesis.
 
 ## 6. Synthesise
 
-Write a short note that a project manager can read:
+Write a short note that a project manager can read, in the order the
+reference file gives. For every type it covers:
 
-1. **Answer first:** the value or range to use for each quantity, and why
-   (closest site, same convention, largest sample).
-2. **Where the sources disagree,** and what the disagreement depends on
-   (core depth, season, method).
+1. **Answer first:** what to use (value, method or framework) and why.
+2. **Where the sources disagree,** and what the disagreement depends on.
 3. **The assumptions from step 1,** each answered with what the
    literature found, or marked untested.
-4. **Gaps:** quantities with no suitable value, what was searched (the query
-   list from step 3), and what would fill the gap (a site measurement, a
-   partner's data, a paywalled paper).
-5. **Caveats** that carry into the analysis, such as values from other
-   regions or from abstracts only.
+4. **Gaps:** what has no suitable source, what was searched (the query list
+   from step 3), and what would fill the gap.
+5. **Caveats** that carry into the analysis.
+
+For a mixed review, give one answer per type, in the order theory,
+methods, values, and say how they connect.
 
 Plain language, absolute dates, qualified absence claims ("the searched
-literature reports no …"). Cite each value by author, year and table or
+literature reports no …"). Cite each row by author, year and table or
 page.
 
 ## 7. Deliver
 
-- **Values table** as CSV in the repo (for example
-  `data/literature/<topic>.csv`), one row per extracted value.
-- **The note** as Markdown or a notebook page, following the repo's style.
+- **Tables** as CSV in the repo (for example `data/literature/<topic>.csv`),
+  named and laid out as the reference file says.
+- **The note** as Markdown or a notebook page, following the repo's style,
+  with any extra deliverable the reference file names (a protocol note, a
+  causal diagram).
 - **Bibliography:** export the Zotero collection
   (`zotero_export_bibliography`, BibTeX) next to the table.
 - **No PDFs in git.** Full texts stay in Zotero, for copyright and size.
@@ -426,9 +411,9 @@ page.
 
 ## Rules that apply throughout
 
-- **No number from memory.** Every value in the table traces to a paper read
-  in this review. If you recall a value but can't find the paper, leave it
-  out and say so.
+- **Nothing from memory.** Every value, method detail and claim in the
+  tables traces to a paper read in this review. If you recall one but
+  can't find the paper, leave it out and say so.
 - **No invented references.** Check that each DOI resolves and matches the
   title and authors before citing it.
 - **Outside sources are read-only,** apart from adding items, tags, notes
@@ -436,7 +421,7 @@ page.
 - **Only licensed access.** Paywalled papers come through the developer's
   own access (steps 4a and 4b) or from the authors, never from shadow
   libraries, never by getting round bot checks, and never by paying.
-- **Check agents' work.** Numbers from search agents, including
+- **Check agents' work.** Rows from search agents, including
   `deep-research`, are checked against the PDF before they change the
   answer.
 
@@ -444,11 +429,12 @@ page.
 
 Reply with:
 
-- the answer per quantity (value or range to use) and its main source
+- the review type, and the answer per item (value or range, method, or
+  framework to use) and its main source
 - the files written, the Zotero collection and the number of papers in it
 - paywalled papers fetched through the browser, and the step 4b list of
   those still missing, with what they would change
 - duplicates merged (keys kept and trashed)
 - for each key paper, the trail followed (step 3a) and what it changed
-- which numbers you checked against the PDF yourself
+- which rows you checked against the PDF yourself
 - gaps, disagreements and open questions

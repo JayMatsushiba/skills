@@ -83,7 +83,7 @@ project, where it was first used.
 | [`work-item`](work-item/SKILL.md) | 4, 6, 7, 8 | Takes one issue through branch, PR, agent and developer feedback, rebase and squash-merge |
 | [`pr-review`](pr-review/SKILL.md) | 5 | Starts the content and code review agents on a PR and posts their findings |
 | [`content-review`](content-review/SKILL.md) | 5 | Reviews report prose as a project manager would read it |
-| [`literature-review`](literature-review/SKILL.md) | 4 | Collects published values for a work item: searches, adds papers to Zotero, extracts each number with its source and page, and writes a values table and note |
+| [`literature-review`](literature-review/SKILL.md) | 4 | Collects published values, methods or theories for a work item: searches, adds papers to Zotero, extracts each value, method or claim with its source and page, and writes a table and note |
 
 `/code-review` is built into Claude Code, so it isn't in this repo.
 
